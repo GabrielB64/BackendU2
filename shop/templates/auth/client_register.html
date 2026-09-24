@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Crear cuenta | MiTienda{% endblock %}
+{% block content %}
+<div class="container py-5"><div class="row justify-content-center"><div class="col-lg-8">
+<div class="card shadow"><div class="card-body p-4"><h2 class="mb-4">Crear cuenta de cliente</h2>
+<form id="register-form">
+<div class="row">
+<div class="col-md-6 mb-3"><label class="form-label">Nombre</label><input id="first_name" class="form-control" required></div>
+<div class="col-md-6 mb-3"><label class="form-label">Apellido</label><input id="last_name" class="form-control" required></div>
+</div>
+<div class="row">
+<div class="col-md-6 mb-3"><label class="form-label">RUT</label><input id="rut" class="form-control" placeholder="12.345.678-5" required></div>
+<div class="col-md-6 mb-3"><label class="form-label">Correo</label><input id="email" type="email" class="form-control" required></div>
+</div>
+<label class="form-label">Teléfono</label>
+<div class="input-group mb-3">
+<select id="phone_country_code" class="form-select country-code">
+<option value="+56">🇨🇱 +56</option><option value="+54">🇦🇷 +54</option><option value="+55">🇧🇷 +55</option><option value="+57">🇨🇴 +57</option><option value="+51">🇵🇪 +51</option><option value="+52">🇲🇽 +52</option><option value="+1">🇺🇸 +1</option><option value="+34">🇪🇸 +34</option><option value="+116">+116</option>
+</select><input id="phone_number" type="tel" class="form-control" required>
+</div>
+<div class="mb-3"><label class="form-label">Contraseña</label><input id="password" type="password" minlength="8" class="form-control" required></div>
+<div class="mb-3"><label class="form-label">Repetir contraseña</label><input id="password_confirm" type="password" minlength="8" class="form-control" required></div>
+<div id="error" class="alert alert-danger d-none"></div>
+<button class="btn btn-primary w-100">Crear cuenta</button>
+</form></div></div></div></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById("register-form").addEventListener("submit",async e=>{
+ e.preventDefault();
+ const fields=["first_name","last_name","rut","email","phone_country_code","phone_number","password","password_confirm"];
+ const body=Object.fromEntries(fields.map(x=>[x,document.getElementById(x).value]));
+ const response=await fetch("/api/auth/register/client/",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+ const data=await response.json();
+ if(!response.ok){const el=document.getElementById("error");el.innerHTML=Object.values(data).flat().join("<br>");el.classList.remove("d-none");return;}
+ window.location.href="/login/client/";
+});
+</script>
+{% endblock %}

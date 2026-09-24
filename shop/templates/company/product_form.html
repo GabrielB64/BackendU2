@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Producto | Empresa{% endblock %}
+{% block content %}
+<div class="container py-5"><div class="row justify-content-center"><div class="col-lg-8">
+<div class="card shadow"><div class="card-body p-4"><h2 id="form-title">Agregar producto</h2>
+<form id="product-form" enctype="multipart/form-data">
+<div class="mb-3"><label class="form-label">Nombre</label><input id="name" class="form-control" required></div>
+<div class="mb-3"><label class="form-label">Descripción</label><textarea id="description" class="form-control" rows="4"></textarea></div>
+<div class="row"><div class="col-md-6 mb-3"><label class="form-label">Precio</label><input id="price" type="number" min="0" step="1" class="form-control" required></div><div class="col-md-6 mb-3"><label class="form-label">Stock</label><input id="stock" type="number" min="0" class="form-control" required></div></div>
+<div class="mb-4"><label class="form-label">Imagen</label><input id="image" type="file" accept="image/*" class="form-control"></div>
+<div id="error" class="alert alert-danger d-none"></div>
+<div class="d-flex gap-2"><a href="/company/products/" class="btn btn-secondary">Cancelar</a><button class="btn btn-primary">Guardar producto</button></div>
+</form></div></div></div></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const params=new URLSearchParams(location.search); const editId=params.get("edit");
+async function loadEdit(){
+ if(!editId)return;
+ document.getElementById("form-title").textContent="Editar producto";
+ const r=await fetch(`/api/company/products/${editId}/`,{headers:{"Authorization":`Bearer ${localStorage.getItem("access_token")}`}});
+ if(!r.ok){location.href="/company/products/";return;}
+ const p=await r.json(); document.getElementById("name").value=p.name;document.getElementById("description").value=p.description||"";document.getElementById("price").value=p.price;document.getElementById("stock").value=p.stock;
+}
+document.getElementById("product-form").addEventListener("submit",async e=>{
+ e.preventDefault(); const token=localStorage.getItem("access_token"); const fd=new FormData();
+ ["name","description","price","stock"].forEach(k=>fd.append(k,document.getElementById(k).value));
+ const image=document.getElementById("image").files[0]; if(image)fd.append("image",image);
+ const url=editId?`/api/company/products/${editId}/`:"/api/company/products/create/";
+ const r=await fetch(url,{method:editId?"PATCH":"POST",headers:{"Authorization":`Bearer ${token}`},body:fd});
+ const d=await r.json(); if(!r.ok){const el=document.getElementById("error");el.innerHTML=Object.values(d).flat().join("<br>");el.classList.remove("d-none");return;}
+ location.href="/company/products/";
+});
+loadEdit();
+</script>
+{% endblock %}

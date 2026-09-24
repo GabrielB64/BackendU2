@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Carrito | MiTienda{% endblock %}
+{% block content %}
+<div class="container py-5">
+<h1>Mi carrito</h1><p class="text-body-secondary">Los productos mostrados aquí están reservados para tu cuenta.</p>
+<div id="cart-container"><div class="text-center py-5"><div class="spinner-border"></div></div></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function loadCart(){
+ const token=localStorage.getItem("access_token"); if(!token){location.href="/login/client/";return;}
+ const r=await fetch("/api/cart/",{headers:{"Authorization":`Bearer ${token}`}});
+ if(!r.ok){location.href="/login/client/";return;}
+ const cart=await r.json(), box=document.getElementById("cart-container");
+ if(!cart.items.length){box.innerHTML='<div class="text-center py-5"><i class="bi bi-cart-x empty-icon"></i><h3>Tu carrito está vacío</h3><a href="/" class="btn btn-primary">Explorar productos</a></div>';return;}
+ let html='<div class="row"><div class="col-lg-8">';
+ cart.items.forEach(i=>{html+=`
+ <div class="card mb-3"><div class="card-body"><div class="row align-items-center g-3">
+ <div class="col-md-2"><img src="${i.product.image}" class="img-fluid rounded"></div>
+ <div class="col-md-4"><h5>${escapeHtml(i.product.name)}</h5><small class="text-body-secondary">Reservado: ${i.quantity}</small></div>
+ <div class="col-md-2">$${Number(i.price_at_addition).toLocaleString("es-CL")}</div>
+ <div class="col-md-2"><input type="number" min="1" value="${i.quantity}" class="form-control" onchange="updateItem(${i.id},this.value)"></div>
+ <div class="col-md-2"><strong>$${Number(i.subtotal).toLocaleString("es-CL")}</strong><button class="btn btn-sm btn-outline-danger mt-2" onclick="removeItem(${i.id})"><i class="bi bi-trash"></i></button></div>
+ </div></div></div>`});
+ html+=`</div><div class="col-lg-4"><div class="card shadow-sm"><div class="card-body"><h4>Resumen</h4><hr><div class="d-flex justify-content-between"><span>Total</span><strong>$${Number(cart.total).toLocaleString("es-CL")}</strong></div><button class="btn btn-primary w-100 mt-4" onclick="checkout()">Confirmar compra</button></div></div></div></div>`;
+ box.innerHTML=html;
+}
+function escapeHtml(v){const d=document.createElement("div");d.textContent=v;return d.innerHTML;}
+async function updateItem(id,quantity){
+ const token=localStorage.getItem("access_token");
+ const r=await fetch(`/api/cart/items/${id}/`,{method:"PATCH",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({quantity:Number(quantity)})});
+ const d=await r.json(); if(!r.ok) showToast(d.detail,"danger"); loadCart(); updateCartCounter();
+}
+async function removeItem(id){
+ const token=localStorage.getItem("access_token");
+ const r=await fetch(`/api/cart/items/${id}/delete/`,{method:"DELETE",headers:{"Authorization":`Bearer ${token}`}});
+ if(r.ok){showToast("Producto liberado.","success");loadCart();updateCartCounter();}
+}
+async function checkout(){
+ const token=localStorage.getItem("access_token");
+ const r=await fetch("/api/checkout/",{method:"POST",headers:{"Authorization":`Bearer ${token}`}});
+ const d=await r.json();
+ if(!r.ok){showToast(d.detail||"No se pudo completar la compra.","danger");return;}
+ showToast(`Compra #${d.id} creada correctamente.`,"success"); loadCart(); updateCartCounter();
+}
+loadCart(); updateCartCounter();
+</script>
+{% endblock %}

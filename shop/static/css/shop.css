@@ -1,0 +1,9 @@
+html, body { min-height: 100%; }
+body { min-height: 100vh; }
+main { min-height: calc(100vh - 130px); }
+.product-image { height: 220px; object-fit: cover; }
+.hero-icon { font-size: 12rem; }
+.empty-icon { font-size: 5rem; }
+.country-code { max-width: 145px; }
+.card { transition: transform .15s ease, box-shadow .15s ease; }
+.card:hover { transform: translateY(-2px); }
